@@ -1,30 +1,47 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:tui_mobility_hub/domain/entities/connection.dart';
+import 'package:tui_mobility_hub/domain/repositories/connection_repository.dart';
+import 'package:tui_mobility_hub/domain/usecases/find_cheapest_route.dart';
+import 'package:tui_mobility_hub/domain/usecases/get_cities.dart';
+import 'package:tui_mobility_hub/domain/usecases/get_connections.dart';
 import 'package:tui_mobility_hub/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('shows the app and destinations', (tester) async {
+    final repository = _FakeConnectionRepository();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      TuiMobilityApp(
+        getConnections: GetConnections(repository),
+        getCities: GetCities(repository),
+        findCheapestRoute: const FindCheapestRoute(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('TUI Mobility Hub'), findsOneWidget);
+    expect(find.text('Explore destinations'), findsOneWidget);
+    expect(find.text('London'), findsWidgets);
+    expect(find.text('Paris'), findsWidgets);
   });
+}
+
+class _FakeConnectionRepository implements ConnectionRepository {
+  static const _cities = [
+    City(name: 'London'),
+    City(name: 'Paris'),
+  ];
+  static const _connections = [
+    Connection(
+      departure: CityPoint(name: 'London', latitude: 51.5, longitude: -0.1),
+      destination: CityPoint(name: 'Paris', latitude: 48.8, longitude: 2.3),
+      price: 42,
+    ),
+  ];
+
+  @override
+  Future<List<City>> getCities() async => _cities;
+
+  @override
+  Future<List<Connection>> getConnections() async => _connections;
 }

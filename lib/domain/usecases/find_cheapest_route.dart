@@ -1,4 +1,3 @@
-import 'dart:collection';
 import '../entities/connection.dart';
 
 class RouteResult {
@@ -27,7 +26,8 @@ class FindCheapestRoute {
 
     final distances = <String, double>{departure: 0};
     final previous = <String, Connection>{};
-    final queue = PriorityQueue<_QueueEntry>((a, b) => a.cost.compareTo(b.cost));
+    final queue =
+        PriorityQueue<_QueueEntry>((a, b) => a.cost.compareTo(b.cost));
     queue.add(_QueueEntry(departure, 0));
 
     while (queue.isNotEmpty) {
