@@ -53,5 +53,13 @@ Debug builds allow cleartext HTTP for the local API. Release builds should use a
 ## Algorithm
 Dijkstra's algorithm minimizes total price over non-negative connection prices. The expected complexity with a binary heap is `O((V + E) log V)`. The route is computed locally in Flutter; the API only supplies connections and city metadata.
 
-## Important API schema note
-The challenge document does not show example JSON bodies. The parsers support common flat and nested field names. If your API uses different property names, adjust `connection_model.dart` and `city_model.dart` to match the actual payload. Coordinates are needed for the map.
+## API response format
+The supplied API returns connections in a `connections` array. Each connection has string `from` and `to` city names, a numeric `price`, and nested `coordinates.from` / `coordinates.to` objects with `lat` and `long` fields. The cities endpoint returns a `cities` array with `name` and a relative SVG `imageUrl`. The Flutter data models parse these fields and the carousel resolves image paths against the configured API base URL.
+
+## Architecture and trade-offs
+The app separates API access and JSON parsing in the data layer, repository contracts and route calculation in the domain layer, and BLoC/UI concerns in the presentation layer. The main dependencies are `http` for API requests, `flutter_bloc` for state management, `flutter_map` and `latlong2` for the map, and `flutter_svg` for the API's city illustrations.
+
+The route finder uses a binary heap and assumes all connection prices are non-negative. Map paths are sampled great-circle arcs between the supplied city coordinates; they are illustrative flight paths, not real airline routes. Route calculation is synchronous, which is appropriate for the challenge dataset; for very large graphs it could move to a background isolate. Other possible improvements include city autocomplete and richer handling of API/network errors.
+
+## Tests and checks
+Tests cover JSON parsing, cheapest-route calculation, sampled map paths, BLoC state transitions, route navigation, no-route feedback, and retry after an API failure. Run `flutter test` and `flutter analyze` from the project directory.

@@ -8,6 +8,7 @@ import 'package:tui_mobility_hub/domain/usecases/get_cities.dart';
 import 'package:tui_mobility_hub/domain/usecases/get_connections.dart';
 import 'package:tui_mobility_hub/presentation/bloc/trip_bloc.dart';
 import 'package:tui_mobility_hub/presentation/pages/home_page.dart';
+import 'package:tui_mobility_hub/presentation/pages/route_results_page.dart';
 
 void main() {
   testWidgets('route results page shares the trip bloc', (tester) async {
@@ -35,6 +36,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Your cheapest route'), findsOneWidget);
+  });
+
+  testWidgets('shows an explanation when no route exists', (tester) async {
+    final repository = _FakeConnectionRepository();
+    final bloc = TripBloc(
+      getConnections: GetConnections(repository),
+      getCities: GetCities(repository),
+      findCheapestRoute: const FindCheapestRoute(),
+    );
+    addTearDown(bloc.close);
+
+    final loaded =
+        bloc.stream.firstWhere((state) => state.status == TripStatus.loaded);
+    bloc.add(const TripStarted());
+    await loaded;
+
+    final noRoute = bloc.stream.firstWhere((state) => state.routeNotFound);
+    bloc.add(const RouteRequested('B', 'A'));
+    await noRoute;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider.value(
+          value: bloc,
+          child: const RouteResultsPage(),
+        ),
+      ),
+    );
+
+    expect(find.text('No route found'), findsOneWidget);
+    expect(
+      find.text('There is no available connection from B to A.'),
+      findsOneWidget,
+    );
+    expect(find.text('Change cities'), findsOneWidget);
   });
 }
 

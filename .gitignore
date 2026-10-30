@@ -43,6 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/TUI Challenge.zip
+/ios_backup/
 
 # Widget Preview related
 .widget_preview/

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:tui_mobility_hub/presentation/pages/route_results_page.dart';
+import 'package:tui_mobility_hub/presentation/widgets/journey_route_map.dart';
 
 void main() {
   test('builds a smooth great-circle segment with its endpoints preserved', () {

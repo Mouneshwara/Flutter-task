@@ -24,6 +24,26 @@ void main() {
     expect(find.text('London'), findsWidgets);
     expect(find.text('Paris'), findsWidgets);
   });
+
+  testWidgets('retry loads destinations after an API error', (tester) async {
+    final repository = _RetryConnectionRepository();
+
+    await tester.pumpWidget(
+      TuiMobilityApp(
+        getConnections: GetConnections(repository),
+        getCities: GetCities(repository),
+        findCheapestRoute: const FindCheapestRoute(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Could not connect to the local API'), findsOneWidget);
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Explore destinations'), findsOneWidget);
+    expect(find.text('London'), findsWidgets);
+  });
 }
 
 class _FakeConnectionRepository implements ConnectionRepository {
@@ -44,4 +64,26 @@ class _FakeConnectionRepository implements ConnectionRepository {
 
   @override
   Future<List<Connection>> getConnections() async => _connections;
+}
+
+class _RetryConnectionRepository extends _FakeConnectionRepository {
+  var _hasFailed = false;
+
+  @override
+  Future<List<City>> getCities() async {
+    _throwFirstRequestError();
+    return super.getCities();
+  }
+
+  @override
+  Future<List<Connection>> getConnections() async {
+    _throwFirstRequestError();
+    return super.getConnections();
+  }
+
+  void _throwFirstRequestError() {
+    if (_hasFailed) return;
+    _hasFailed = true;
+    throw Exception('API unavailable');
+  }
 }
